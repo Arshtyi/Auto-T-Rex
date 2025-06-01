@@ -1,0 +1,16 @@
+{
+    "name": "auto-t-rex",
+    "version": "1.0.0",
+    "description": "自动打开Chrome恐龙游戏",
+    "main": "main.js",
+    "type": "module",
+    "scripts": {
+        "start": "node main.js "
+    },
+    "dependencies": {
+        "@tensorflow/tfjs": "^4.22.0",
+        "@tensorflow/tfjs-node": "^4.22.0",
+        "ml-pca": "^4.1.1",
+        "playwright": "^1.41.0"
+    }
+}
