@@ -4,7 +4,7 @@ export async function openDinosaurGame() {
         const browser = await chromium.launch({
             channel: "chrome",
             headless: false,
-            args: ["--start-maximized"],
+            args: ["--start-maximized", "--mute-audio"],
         });
         const context = await browser.newContext({
             viewport: null,
@@ -28,6 +28,35 @@ export async function openDinosaurGame() {
         if (!isGameReady) {
             throw new Error("Unable to load dinosaur game, please check if chrome://dino/ is accessible");
         }
+
+        // 静音页面上的所有音频元素
+        await page.evaluate(() => {
+            // 静音所有音频和视频元素
+            const mediaElements = [...document.querySelectorAll("audio, video")];
+            mediaElements.forEach((media) => {
+                media.muted = true;
+                media.volume = 0;
+            });
+
+            // 如果游戏使用 Web Audio API
+            if (window.Runner && window.Runner.instance_ && window.Runner.instance_.audioContext) {
+                try {
+                    const audioContext = window.Runner.instance_.audioContext;
+                    // 将主音量设置为0
+                    if (audioContext.destination && audioContext.destination.gain) {
+                        audioContext.destination.gain.value = 0;
+                    }
+
+                    // 如果有单独的音频控制
+                    if (window.Runner.instance_.audioConfig) {
+                        window.Runner.instance_.audioConfig.muted = true;
+                    }
+                } catch (e) {
+                    console.log("Note: Could not mute Web Audio API:", e);
+                }
+            }
+        });
+
         await page.evaluate(() => {
             window.originalGameOver = window.Runner.instance_.gameOver;
             window.Runner.instance_.gameOver = function () {
