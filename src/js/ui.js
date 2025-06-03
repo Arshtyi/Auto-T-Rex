@@ -165,6 +165,43 @@ export async function createInfoPanel(page) {
                 padding-bottom: 10px; /* Increased bottom padding */
                 border-bottom: 1px solid var(--border-color); /* Added bottom separator */
                 letter-spacing: 0.5px; /* Added letter spacing */
+                cursor: pointer; /* 添加指针样式，表示可点击 */
+            }
+            
+            /* 添加折叠图标样式 */
+            .collapse-icon {
+                font-size: 16px;
+                transition: transform 0.3s ease;
+                margin-left: 8px;
+                color: var(--text-secondary);
+                user-select: none;
+            }
+            
+            /* 添加卡片内容容器样式 */
+            .card-content {
+                transition: max-height 0.3s ease, opacity 0.3s ease;
+                max-height: 800px;
+                opacity: 1;
+                overflow: hidden;
+            }
+            
+            /* 折叠状态样式 */
+            .card-collapsed .card-content {
+                max-height: 0;
+                opacity: 0;
+                margin: 0;
+                padding: 0;
+            }
+            
+            /* 折叠状态下的图标旋转 */
+            .card-collapsed .collapse-icon {
+                transform: rotate(-90deg);
+            }
+            
+            /* 调整卡片头部在折叠状态下的样式 */
+            .card-collapsed .card-header {
+                margin-bottom: 0;
+                border-bottom: none;
             }
 
             .stats-row {
@@ -406,23 +443,28 @@ export async function createInfoPanel(page) {
             </div>
 
             <div class="card" id="game-stats">
-                <div class="card-header">Game Statistics</div>
-                <div class="stats-grid">
-                    <div class="stats-row">
-                        <span>Iteration:</span>
-                        <span id="iteration-count" class="stat-value">0</span>
-                    </div>
-                    <div class="stats-row">
-                        <span>Current Score:</span>
-                        <span id="current-score" class="stat-value">0</span>
-                    </div>
-                    <div class="stats-row">
-                        <span>Highest Score:</span>
-                        <span id="high-score" class="stat-value">0</span>
-                    </div>
-                    <div class="stats-row">
-                        <span>Game Speed:</span>
-                        <span id="game-speed" class="stat-value">0</span>
+                <div class="card-header">
+                    <span>Game Statistics</span>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="card-content">
+                    <div class="stats-grid">
+                        <div class="stats-row">
+                            <span>Iteration:</span>
+                            <span id="iteration-count" class="stat-value">0</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Current Score:</span>
+                            <span id="current-score" class="stat-value">0</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Highest Score:</span>
+                            <span id="high-score" class="stat-value">0</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Game Speed:</span>
+                            <span id="game-speed" class="stat-value">0</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -430,57 +472,72 @@ export async function createInfoPanel(page) {
             <div class="card" id="ai-decision">
                 <div class="card-header">
                     <span>AI Decision Analysis</span>
-                    <span id="decision-status" class="status-indicator"></span>
+                    <div style="display: flex; align-items: center;">
+                        <span id="decision-status" class="status-indicator"></span>
+                        <span class="collapse-icon" style="margin-left: 10px;">▼</span>
+                    </div>
                 </div>
-                <div id="obstacle-container">
-                    <div class="stats-row">
-                        <span>Obstacle Type:</span>
-                        <span id="obstacle-info" class="stat-value">None</span>
-                    </div>
-                    <div class="stats-row">
-                        <span>Obstacle Distance:</span>
-                        <span id="obstacle-distance" class="stat-value">0</span>
-                    </div>
-                    <div class="stats-row">
-                        <span>AI Decision:</span>
-                        <span id="jump-decision" class="stat-value">Waiting</span>
-                    </div>
-                    <div class="stats-row">
-                        <span>Decision Reason:</span>
-                        <span id="decision-reason" class="stat-value">-</span>
-                    </div>
-                    <div class="stats-row">
-                        <span>Threshold Calculation:</span>
-                        <span id="threshold-calc" class="stat-value small-text">-</span>
+                <div class="card-content">
+                    <div id="obstacle-container">
+                        <div class="stats-row">
+                            <span>Obstacle Type:</span>
+                            <span id="obstacle-info" class="stat-value">None</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Obstacle Distance:</span>
+                            <span id="obstacle-distance" class="stat-value">0</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>AI Decision:</span>
+                            <span id="jump-decision" class="stat-value">Waiting</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Decision Reason:</span>
+                            <span id="decision-reason" class="stat-value">-</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Threshold Calculation:</span>
+                            <span id="threshold-calc" class="stat-value small-text">-</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="card" id="math-model">
-                <div class="card-header">Mathematical Model & Algorithm Analysis</div>
-                <div id="formula-display" class="formula-container">Loading mathematical model...</div>
+                <div class="card-header">
+                    <span>Mathematical Model & Algorithm Analysis</span>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="card-content">
+                    <div id="formula-display" class="formula-container">Loading mathematical model...</div>
+                </div>
             </div>
 
             <div class="card" id="project-info">
-                <div class="card-header">Project Information</div>
-                <div class="stats-grid two-column">
-                    <div class="stats-row">
-                        <span>Project Name:</span>
-                        <span class="stat-value">Auto-T-Rex</span>
-                    </div>
-                    <div class="stats-row">
-                        <span>Version:</span>
-                        <span class="stat-value">1.0.0</span>
-                    </div>
-                    <div class="stats-row">
-                        <span>GitHub:</span>
-                        <span>
-                            <a href="https://github.com/Arshtyi/Auto-T-Rex" class="project-link" target="_blank">Arshtyi/Auto-T-Rex</a>
-                        </span>
-                    </div>
-                    <div class="stats-row">
-                        <span>License:</span>
-                        <span class="stat-value">MIT</span>
+                <div class="card-header">
+                    <span>Project Information</span>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="card-content">
+                    <div class="stats-grid two-column">
+                        <div class="stats-row">
+                            <span>Project Name:</span>
+                            <span class="stat-value">Auto-T-Rex</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>Version:</span>
+                            <span class="stat-value">1.0.0</span>
+                        </div>
+                        <div class="stats-row">
+                            <span>GitHub:</span>
+                            <span>
+                                <a href="https://github.com/Arshtyi/Auto-T-Rex" class="project-link" target="_blank">Arshtyi/Auto-T-Rex</a>
+                            </span>
+                        </div>
+                        <div class="stats-row">
+                            <span>License:</span>
+                            <span class="stat-value">MIT</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -517,6 +574,17 @@ export async function createInfoPanel(page) {
                 }
             });
         }
+
+        // 添加卡片折叠功能
+        const cards = document.querySelectorAll(".card");
+        cards.forEach((card) => {
+            const header = card.querySelector(".card-header");
+            if (header) {
+                header.addEventListener("click", () => {
+                    card.classList.toggle("card-collapsed");
+                });
+            }
+        });
 
         // 添加 GitHub 链接的点击处理
         const projectLink = document.querySelector(".project-link");
@@ -576,6 +644,7 @@ export async function updateInfoPanel(page, data) {
                 setTimeout(() => {
                     statusIndicator.className = "status-indicator";
                 }, 5000);
+                // 已移除自动展开功能
             }
         }
         if (document.getElementById("decision-reason") && data.reason) {
@@ -595,6 +664,8 @@ export async function updateInfoPanel(page, data) {
                 setTimeout(() => {
                     panel.classList.remove("game-over");
                 }, 2000);
+
+                // 已移除游戏结束时自动展开卡片的功能
             }
         }
 
@@ -652,6 +723,8 @@ export async function updateFormulaDisplay(page, formulas) {
             }
 
             formulaContainer.textContent = formulaText || "No mathematical formulas available";
+
+            // 已移除新公式更新时自动展开卡片的功能
         }
     }, formulas);
 }
