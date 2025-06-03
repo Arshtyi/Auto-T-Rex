@@ -1,105 +1,135 @@
 # Auto T-Rex Player
 
-This project is an AI that automatically plays the Chrome Dinosaur Game.
+-   SDU2024 级人工智能引论大作业
+-   基于 TF 的 Google Dino AI
 
-## Environment Requirements
+## 配置
 
--   Node.js
--   npm
+-   主开发环境：Node.js（Linux）
+-   包管理器：npm
 
-## Setup and Installation
+## 运行
 
-1. **Clone the repository:**
+1. **Clone Repo：**
 
     ```bash
     git clone https://github.com/Arshtyi/Auto-T-Rex.git
     cd Auto-T-Rex
     ```
 
-2. **Install dependencies:**
+2. **安装依赖并运行：**
 
-    ```bash
-    npm install
-    ```
+    `bash npm install && npm start `
 
-## How to Run
+这将：
 
-To start the AI player, run the following command in the project directory:
+-   打开一个新的 Chrome 浏览器窗口.
+-   导航到 `chrome://dino`页面（离线恐龙游戏，静音网页）.
+-   自动开始玩游戏.
+-   显示一个 AI 控制面板，提供实时游戏统计数据和决策洞察.
+
+**在终端中按 `Ctrl+C`停止程序.**
+
+## Details
+
+-   该项目使用 Node.js 构建，并依赖 Playwright 库进行浏览器自动化.
+
+### 核心模块：
+
+-   **`main.js`**: 应用程序的主入口点.它初始化 Playwright，打开游戏，并启动自动播放循环.
+-   **`src/js/openWeb.js`**: 处理浏览器和页面设置，包括导航到游戏并注入必要的脚本.
+-   **`src/js/play.js`**: 包含主要的游戏逻辑.它持续：
+    -   获取当前游戏状态（位置、速度、障碍物位置）.
+    -   分析障碍物以决定是否跳跃.
+    -   通过模拟按键来执行跳跃动作.
+    -   用游戏信息更新 UI.
+-   **`src/js/ui.js`**: 管理在游戏页面上显示的动态信息面板.此面板显示：
+    -   游戏统计（迭代次数、当前分数、最高分数、游戏速度）.
+    -   AI 决策分析（障碍物类型、距离、AI 决策、原因、阈值计算）.
+    -   数学模型和算法分析（用于决策的公式）.
+    -   项目信息.
+-   **`src/js/analytics.js`**: 收集和处理游戏数据进行分析，并为 UI 提供公式.
+
+### TensorFlow 实现与规划
+
+本项目在依赖中包含了 TensorFlow.js 相关库，计划通过机器学习方法增强 AI 决策能力。目前的实现和未来规划如下：
+
+#### 当前实现状态
+
+-   **规则基决策系统**：项目当前使用手动编写的规则来分析游戏状态并做出决策，这些规则基于游戏速度、障碍物类型和距离等因素
+-   **数据收集**：`analytics.js` 模块收集游戏数据（障碍物特征、跳跃决策、游戏结果），为未来的模型训练准备数据
+-   **简化的特征提取**：实现了基本的主成分分析（PCA）概念，使用障碍物高度和距离作为特征
+
+#### TensorFlow 实现计划
+
+-   **神经网络模型**：使用 TensorFlow.js 构建一个深度神经网络，输入游戏状态（障碍物类型、位置、游戏速度等），输出跳跃决策
+-   **强化学习**：实现强化学习算法（如 DQN）让 AI 通过尝试和错误自我提升
+-   **模型架构**：
+    -   输入层：游戏状态特征（障碍物距离、高度、类型、游戏速度等）
+    -   隐藏层：2-3 个全连接层，使用 ReLU 激活函数
+    -   输出层：跳跃概率（二元分类）
+
+#### 未来开发路线图
+
+1. **数据收集阶段**：收集大量游戏数据，包括状态、动作和结果
+2. **模型训练**：使用收集的数据训练 TensorFlow 模型
+3. **混合系统**：实现规则基系统和 TensorFlow 模型的混合决策系统
+4. **在线学习**：添加在线学习功能，使 AI 能够在游戏过程中不断改进
+
+#### 如何切换 AI 模式
+
+未来版本将支持在不同 AI 决策模式之间切换：
 
 ```bash
+# 使用规则基 AI（默认）
 npm start
+
+# 使用 TensorFlow 模型
+npm start -- --mode=tf
+
+# 使用混合模式
+npm start -- --mode=hybrid
 ```
 
-This will:
+### 游戏状态获取：
 
-1. Open a new Chrome browser window.
-2. Navigate to the `chrome://dino` page (the offline dinosaur game).
-3. Automatically start playing the game.
-4. Display an AI Control Panel with real-time game statistics and decision-making insights.
+AI 通过使用 `page.evaluate()`在浏览器上下文中执行 JavaScript 代码来访问游戏的内部状态.这使其能够获得如下信息：
 
-Press `Ctrl+C` in the terminal to stop the program.
+-   T-Rex 的位置和状态（例如，跳跃、低头）.
+-   即将出现的障碍物的位置、类型（仙人掌、鸟）和尺寸.
+-   当前游戏速度.
+-   分数.
 
-## Implementation Details
+### 决策逻辑（`src/js/play.js`中的 `analyzeObstacles`函数）：
 
-The project is built using Node.js and relies on the Playwright library for browser automation.
+核心决策过程包括：
 
-### Core Modules:
+1. **识别最近的障碍物**：AI 专注于 T-Rex 前方最近的障碍物.
+2. **计算距离**：到最近障碍物的水平距离是一个关键因素.
+3. **考虑游戏速度**：游戏会随着时间的推移加速，因此跳跃决策必须适应.计算出一个 `speedFactor`.
+4. **特定障碍物策略**：
+    - **仙人掌**：
+        - 跳跃阈值根据仙人掌的高度进行调整（较小的仙人掌可以更晚跳）.
+        - 公式：`distance < (base_threshold * speedFactor * height_adjustment_factor)`
+    - **鸟类（翼龙）**：
+        - 鸟的高度至关重要.AI 根据鸟飞行的高度（低、中、高）使用不同的跳跃阈值和策略.
+        - 对于非常高的鸟，AI 不会跳跃.
+        - 对于可能在 T-Rex 跳跃顶点与其碰撞的高度的鸟，如果鸟很近，AI 可能决定不跳.
+        - 公式涉及鸟的 `distance`、`speed`和 `relativeHeight`.
+5. **跳跃执行**：如果分析确定需要跳跃，AI 会模拟按下"空格"键.
+6. **冷却时间**：跳跃后应用短暂的超时，以防止意外的双重跳跃并允许 T-Rex 着陆.
 
--   **`main.js`**: The main entry point of the application. It initializes Playwright, opens the game, and starts the auto-play loop.
--   **`src/js/openWeb.js`**: Handles the browser and page setup, including navigating to the game and injecting necessary scripts.
--   **`src/js/play.js`**: Contains the primary game-playing logic. It continuously:
-    -   Retrieves the current game state (T-Rex position, speed, obstacle locations).
-    -   Analyzes obstacles to decide whether to jump or not.
-    -   Executes jump actions by simulating keyboard presses.
-    -   Updates the UI with game information.
--   **`src/js/ui.js`**: Manages the dynamic information panel displayed on the game page. This panel shows:
-    -   Game Statistics (iteration, current score, highest score, game speed).
-    -   AI Decision Analysis (obstacle type, distance, AI decision, reason, threshold calculation).
-    -   Mathematical Model & Algorithm Analysis (formulas used for decision making).
-    -   Project Information.
--   **`src/js/analytics.js`**: Collects and processes game data for analysis and provides formulas for the UI.
+### UI 面板：
 
-### Game State Retrieval:
+信息面板通过在 `page.evaluate()`上下文中使用 DOM 操作动态创建和更新.它提供了 AI"思考过程"和游戏当前状态的透明视图.它还包括主题切换（暗/亮）和最小化按钮.
 
-The AI accesses the game's internal state by executing JavaScript code within the browser context using `page.evaluate()`. This allows it to get information like:
+## 操作原理
 
--   T-Rex's position and status (e.g., jumping, ducking).
--   Positions, types (cactus, bird), and dimensions of upcoming obstacles.
--   Current game speed.
--   Score.
-
-### Decision-Making Logic (`analyzeObstacles` function in `src/js/play.js`):
-
-The core decision-making process involves:
-
-1. **Identifying the nearest obstacle**: The AI focuses on the closest obstacle in front of the T-Rex.
-2. **Calculating distance**: The horizontal distance to the nearest obstacle is a key factor.
-3. **Considering game speed**: The game speeds up over time, so jump decisions must adapt. A `speedFactor` is calculated.
-4. **Obstacle-specific strategies**:
-    - **Cacti**:
-        - The jump threshold is adjusted based on the cactus's height (smaller cacti can be jumped later).
-        - Formula: `distance < (base_threshold * speedFactor * height_adjustment_factor)`
-    - **Birds (Pterodactyls)**:
-        - Bird altitude is crucial. The AI uses different jump thresholds and strategies based on whether the bird is flying low, medium, or high.
-        - For very high birds, the AI will not jump.
-        - For birds at a height that might collide with the T-Rex at the apex of its jump, the AI might decide not to jump if the bird is close.
-        - Formulas involve `distance`, `speed`, and `relativeHeight` of the bird.
-5. **Jump execution**: If the analysis determines a jump is necessary, the AI simulates pressing the "Space" key.
-6. **Cooldown**: A short timeout is applied after a jump to prevent accidental double jumps and allow the T-Rex to land.
-
-### UI Panel:
-
-The information panel is dynamically created and updated using DOM manipulation within the `page.evaluate()` context. It provides a transparent view into the AI's "thought process" and the game's current state. It also includes a theme toggle (dark/light) and a minimize button.
-
-## Principles of Operation
-
-1. **Browser Automation**: Playwright launches and controls a Chrome browser instance.
-2. **Game State Injection & Extraction**:
-    - The game's `Runner.instance_.gameOver()` and `Runner.instance_.restart()` functions are overridden to allow the AI to detect game over and reset states.
-    - Game variables (like `Runner.instance_.horizon.obstacles`, `tRex.xPos`, `currentSpeed`) are read directly from the game's JavaScript environment.
-3. **Real-time Analysis**: In a continuous loop, the AI fetches the game state, analyzes it, makes a decision, and acts.
-4. **Dynamic Thresholds**: Jump decisions are not based on fixed distances. Instead, they use dynamic thresholds that take into account the current game speed and the specific characteristics (type, height, position) of the obstacles. This makes the AI more adaptive to the increasing difficulty of the game.
-5. **Data Collection**: The `analytics.js` module is designed to record game events like scores, speeds, and obstacle encounters, which can be used for further analysis or model training (though advanced model training is not implemented in the current version).
-6. **User Interface Feedback**: The UI panel provides immediate visual feedback on what the AI is "seeing" and "thinking," making it easier to understand its behavior and debug the logic.
-
-This project serves as a fun example of applying browser automation and basic decision-making algorithms to play a simple game.
+1. **浏览器自动化**：Playwright 启动并控制 Chrome 浏览器实例.
+2. **游戏状态注入和提取**：
+    - 游戏的 `Runner.instance_.gameOver()`和 `Runner.instance_.restart()`函数被重写，允许 AI 检测游戏结束和重置状态.
+    - 游戏变量（如 `Runner.instance_.horizon.obstacles`、`tRex.xPos`、`currentSpeed`）直接从游戏的 JavaScript 环境中读取.
+3. **实时分析**：在连续循环中，AI 获取游戏状态，分析它，做出决策并采取行动.
+4. **动态阈值**：跳跃决策不基于固定距离.相反，它们使用动态阈值，考虑当前游戏速度和障碍物的特定特征（类型、高度、位置）.这使 AI 更能适应游戏的增加难度.
+5. **数据收集**：`analytics.js`模块设计用于记录游戏事件，如分数、速度和障碍物遭遇，可用于进一步分析或模型训练（尽管高级模型训练在当前版本中未实现）.
+6. **用户界面反馈**：UI 面板提供了关于 AI"看到"和"思考"的即时视觉反馈，使其更容易理解其行为并调试逻辑.

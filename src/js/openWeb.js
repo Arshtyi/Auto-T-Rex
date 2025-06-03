@@ -29,20 +29,20 @@ export async function openDinosaurGame() {
             throw new Error("Unable to load dinosaur game, please check if chrome://dino/ is accessible");
         }
 
-        // 静音页面上的所有音频元素
+        // Mute all audio elements on the page
         await page.evaluate(() => {
-            // 静音所有音频和视频元素
+            // Mute all audio and video elements
             const mediaElements = [...document.querySelectorAll("audio, video")];
             mediaElements.forEach((media) => {
                 media.muted = true;
                 media.volume = 0;
             });
 
-            // 如果游戏使用 Web Audio API
+            // If the game uses Web Audio API
             if (window.Runner && window.Runner.instance_ && window.Runner.instance_.audioContext) {
                 try {
                     const audioContext = window.Runner.instance_.audioContext;
-                    // 将主音量设置为0
+                    // Set main volume to 0
                     if (audioContext.destination && audioContext.destination.gain) {
                         audioContext.destination.gain.value = 0;
                     }

@@ -1,7 +1,7 @@
 {
     "name": "auto-t-rex",
     "version": "1.0.0",
-    "description": "自动打开Chrome恐龙游戏",
+    "description": "Automatically play Chrome dinosaur game",
     "main": "main.js",
     "type": "module",
     "scripts": {

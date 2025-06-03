@@ -129,7 +129,7 @@ export async function createInfoPanel(page) {
                 transition: all 0.3s ease;
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Enhanced shadow */
                 position: relative;
-                overflow: hidden;
+                overflow: visible; /* Changed to visible to ensure content can fully expand */
             }
 
             .card::before {
@@ -165,10 +165,10 @@ export async function createInfoPanel(page) {
                 padding-bottom: 10px; /* Increased bottom padding */
                 border-bottom: 1px solid var(--border-color); /* Added bottom separator */
                 letter-spacing: 0.5px; /* Added letter spacing */
-                cursor: pointer; /* 添加指针样式，表示可点击 */
+                cursor: pointer; /* Add pointer style to indicate clickable */
             }
             
-            /* 添加折叠图标样式 */
+            /* Add collapse icon style */
             .collapse-icon {
                 font-size: 16px;
                 transition: transform 0.3s ease;
@@ -177,28 +177,31 @@ export async function createInfoPanel(page) {
                 user-select: none;
             }
             
-            /* 添加卡片内容容器样式 */
+            /* Add card content container style */
             .card-content {
-                transition: max-height 0.3s ease, opacity 0.3s ease;
-                max-height: 800px;
+                transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease, padding 0.3s ease;
+                max-height: none;
+                height: auto;
                 opacity: 1;
-                overflow: hidden;
+                overflow: visible;
             }
             
-            /* 折叠状态样式 */
+            /* Collapsed state style */
             .card-collapsed .card-content {
                 max-height: 0;
+                height: 0;
                 opacity: 0;
                 margin: 0;
                 padding: 0;
+                overflow: hidden;
             }
             
-            /* 折叠状态下的图标旋转 */
+            /* Icon rotation in collapsed state */
             .card-collapsed .collapse-icon {
                 transform: rotate(-90deg);
             }
             
-            /* 调整卡片头部在折叠状态下的样式 */
+            /* Adjust card header style in collapsed state */
             .card-collapsed .card-header {
                 margin-bottom: 0;
                 border-bottom: none;
@@ -236,8 +239,8 @@ export async function createInfoPanel(page) {
                 overflow-x: auto;
                 margin-top: 8px; /* Increased top margin */
                 color: var(--text-primary); /* Ensure consistent text color */
-                max-height: 250px; /* Increased max height */
-                overflow-y: auto; /* Added vertical scrollbar */
+                max-height: none; /* Removed max height limit */
+                overflow-y: visible; /* Removed vertical scrollbar */
                 box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* Added inner shadow */
             }
 
@@ -340,7 +343,7 @@ export async function createInfoPanel(page) {
                 }
             }
 
-            /* 添加响应式布局 */
+            /* Add responsive layout */
             @media (max-width: 1200px) {
                 #ai-info-panel {
                     width: 450px;
@@ -406,7 +409,7 @@ export async function createInfoPanel(page) {
                 }
             }
 
-            /* 增强可点击元素的样式 */
+            /* Enhance clickable elements style */
             .panel-btn, .project-link {
                 cursor: pointer;
                 transition: all 0.2s ease;
@@ -545,7 +548,7 @@ export async function createInfoPanel(page) {
 
         document.body.appendChild(panel);
 
-        // 初始化事件监听器
+        // Initialize event listeners
         const themeToggle = document.getElementById("theme-toggle");
         if (themeToggle) {
             themeToggle.addEventListener("click", () => {
@@ -575,7 +578,7 @@ export async function createInfoPanel(page) {
             });
         }
 
-        // 添加卡片折叠功能
+        // Add card collapse functionality
         const cards = document.querySelectorAll(".card");
         cards.forEach((card) => {
             const header = card.querySelector(".card-header");
@@ -586,7 +589,7 @@ export async function createInfoPanel(page) {
             }
         });
 
-        // 添加 GitHub 链接的点击处理
+        // Add GitHub link click handler
         const projectLink = document.querySelector(".project-link");
         if (projectLink) {
             projectLink.addEventListener("click", (e) => {
@@ -630,7 +633,7 @@ export async function updateInfoPanel(page, data) {
             document.getElementById("obstacle-distance").textContent = data.distance.toFixed(1);
         }
 
-        // 更新决策信息
+        // Update decision information
         if (document.getElementById("jump-decision") && typeof data.shouldJump !== "undefined") {
             const jumpElement = document.getElementById("jump-decision");
             jumpElement.textContent = data.shouldJump ? "Jump" : "No Jump";
@@ -644,7 +647,7 @@ export async function updateInfoPanel(page, data) {
                 setTimeout(() => {
                     statusIndicator.className = "status-indicator";
                 }, 5000);
-                // 已移除自动展开功能
+                // Auto-expand feature removed
             }
         }
         if (document.getElementById("decision-reason") && data.reason) {
@@ -665,7 +668,7 @@ export async function updateInfoPanel(page, data) {
                     panel.classList.remove("game-over");
                 }, 2000);
 
-                // 已移除游戏结束时自动展开卡片的功能
+                // Auto-expand feature for game over removed
             }
         }
 
