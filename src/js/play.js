@@ -10,15 +10,44 @@ import {
     getPCAFormula,
 } from "./analytics.js";
 
-import { createInfoPanel, updateInfoPanel, updateFormulaDisplay } from "./ui.js";
+import { createInfoPanel, updateInfoPanel, updateFormulaDisplay, updateNeuralNetworkDisplay } from "./ui.js";
+
+import {
+    initializeNeuralNetwork,
+    makeDecision as makeNeuralNetworkDecision,
+    resetTrainingData,
+    recordReward,
+    finalizeEpisode,
+    getModelInfo,
+    getVisualizationData,
+} from "./neuralNetwork.js";
+
+// Flag to use neural network for decision making
+const useNeuralNetwork = true;
+
+// Flag to add exploration (randomly ignore neural network decision sometimes)
+const useExploration = true;
+const explorationRate = 0.1; // 10% chance to ignore neural network and use standard logic
 
 export async function startAutoPlay(page) {
     console.log("Starting AI gameplay...");
     await createInfoPanel(page);
+
+    // Initialize neural network if enabled
+    let neuralNetworkInfo = null;
+    if (useNeuralNetwork) {
+        neuralNetworkInfo = initializeNeuralNetwork();
+        console.log("Neural network initialized:", neuralNetworkInfo);
+
+        // Show initial neural network visualization
+        await updateNeuralNetworkDisplay(page, getVisualizationData());
+    }
+
     let lastScore = 0;
     let frameCount = 0;
     let iterationCount = 1;
     let highestScore = 0;
+
     while (true) {
         try {
             if (frameCount % 100 === 0) {
@@ -30,28 +59,56 @@ export async function startAutoPlay(page) {
                         speed: runner?.currentSpeed || 0,
                     };
                 });
+
                 if (gameData.score !== lastScore) {
                     console.log(`Current score: ${gameData.score}`);
                     const currentScoreNum = parseInt(gameData.score, 10);
+
                     if (currentScoreNum > highestScore) {
                         highestScore = currentScoreNum;
                     }
+
                     recordGameScore(currentScoreNum);
                     recordGameSpeed(gameData.speed);
+
+                    // Record reward for neural network
+                    if (useNeuralNetwork) {
+                        recordReward(currentScoreNum);
+                    }
+
                     lastScore = gameData.score;
                 }
             }
+
             frameCount++;
+
             // Check if game is over
             const isGameOver = await page.evaluate(() => window.isGameOver);
+
             if (isGameOver) {
                 console.log("Game over, press Space to restart...");
+
                 // Record final game score
                 const finalScore = parseInt(lastScore, 10);
                 recordGameScore(finalScore);
+
                 // Generate analytics for this game round
                 const roundAnalytics = generateGameAnalytics();
                 console.log("Round Statistics:", roundAnalytics);
+
+                // Finalize neural network episode if enabled
+                let trainingResult = null;
+                if (useNeuralNetwork) {
+                    trainingResult = await finalizeEpisode(finalScore);
+                    console.log("Neural Network Training:", trainingResult);
+
+                    // Update neural network visualization with new episode data
+                    const visualizationData = getVisualizationData();
+                    visualizationData.newEpisode = true;
+                    visualizationData.loss = trainingResult.loss;
+                    await updateNeuralNetworkDisplay(page, visualizationData);
+                }
+
                 // Display game over message to user
                 await updateInfoPanel(page, {
                     iteration: iterationCount,
@@ -65,9 +122,16 @@ export async function startAutoPlay(page) {
                 await page.waitForTimeout(1000);
                 await page.keyboard.press("Space");
                 await page.waitForTimeout(1000);
+
                 // Game restarted, increment iteration count
                 iterationCount++;
                 lastScore = 0; // Reset current score
+
+                // Reset neural network training data for new episode
+                if (useNeuralNetwork) {
+                    resetTrainingData();
+                }
+
                 // Reset game analytics and update info panel
                 await updateInfoPanel(page, {
                     iteration: iterationCount,
@@ -76,30 +140,58 @@ export async function startAutoPlay(page) {
                     speed: 0,
                     gameReset: true,
                 });
+
                 // Game round summary can also be added here
                 const analytics = generateGameAnalytics();
                 console.log(`Game round ended #${iterationCount - 1}`, analytics);
                 continue;
             }
+
             const gameState = await getGameState(page);
+
             if (gameState) {
-                const result = analyzeObstacles(gameState);
+                // Use neural network or standard decision logic
+                let result;
+                if (useNeuralNetwork && gameState.obstacles && gameState.obstacles.length > 0) {
+                    // Use exploration strategy to sometimes ignore neural network
+                    if (useExploration && Math.random() < explorationRate) {
+                        result = analyzeObstacles(gameState);
+                        if (result.reason) {
+                            result.reason = "Exploration: " + result.reason;
+                        }
+                    } else {
+                        result = makeNeuralNetworkDecision(gameState, gameState.obstacles[0]);
+                    }
+                } else {
+                    result = analyzeObstacles(gameState);
+                }
+
                 const shouldJump = result.shouldJump;
+
                 // Update info panel with current game state and AI decision (every frame)
                 if (gameState.obstacles && gameState.obstacles.length > 0) {
                     const nearest = gameState.obstacles[0];
                     const distance = nearest.x - (gameState.tRex.x + gameState.tRex.width);
+
                     // Record obstacle encounter
                     recordObstacleEncounter(nearest);
+
                     // Generate mathematical decision formula
                     const decisionFormula = getDecisionFormula(gameState, nearest);
+
                     // Update mathematical formula display
                     await updateFormulaDisplay(page, {
-                        jumpThreshold: decisionFormula,
+                        jumpThreshold: result.neural ? result.thresholdCalc : decisionFormula,
                         cactus: nearest.isBird ? null : getCactusJumpFormula(Math.max(1, gameState.speed / 7)),
                         bird: nearest.isBird ? getBirdJumpFormula() : null,
                         pca: getPCAFormula(),
                     });
+
+                    // Update neural network visualization if enabled (once every 30 frames)
+                    if (useNeuralNetwork && frameCount % 30 === 0) {
+                        await updateNeuralNetworkDisplay(page, getVisualizationData());
+                    }
+
                     // Update info panel with latest data
                     await updateInfoPanel(page, {
                         iteration: iterationCount,
@@ -121,6 +213,7 @@ export async function startAutoPlay(page) {
                     if (shouldJump) {
                         recordJump(gameState, nearest, distance, true);
                     }
+
                     // Log detailed info every 100 frames to avoid console spam
                     if (frameCount % 100 === 0) {
                         console.log(
@@ -128,6 +221,7 @@ export async function startAutoPlay(page) {
                                 nearest.isBird ? "Bird" : "Cactus"
                             }, Jump=${shouldJump}`
                         );
+
                         // If it's a bird obstacle, output its relative height and perform safety checks
                         if (nearest.isBird) {
                             const canvasHeight = gameState.canvas.height || 150;
@@ -143,11 +237,13 @@ export async function startAutoPlay(page) {
                         }
                     }
                 }
+
                 if (shouldJump) {
                     await page.keyboard.press("Space");
                     await page.waitForTimeout(100);
                 }
             }
+
             await page.waitForTimeout(10);
         } catch (error) {
             console.error("Error in auto play loop:", error);
