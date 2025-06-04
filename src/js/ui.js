@@ -125,7 +125,7 @@ export async function createInfoPanel(page) {
             /* 游戏状态卡片样式 */
             .game-stats-container {
                 display: grid;
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: 1fr;
                 gap: 15px;
                 margin-bottom: 20px;
             }
@@ -153,18 +153,62 @@ export async function createInfoPanel(page) {
                 padding-bottom: 8px;
                 text-align: center;
                 letter-spacing: 0.5px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                user-select: none;
+            }
+            
+            .stats-title:hover {
+                color: var(--secondary-color);
+                background: rgba(0,0,0,0.1);
+                border-radius: 8px;
+                padding: 8px;
+                margin-bottom: 12px;
+                margin-top: -8px;
+            }
+            
+            .collapse-indicator {
+                font-size: 14px;
+                transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                color: var(--text-secondary);
+            }
+            
+            .stats-card.collapsed .collapse-indicator {
+                transform: rotate(-90deg);
+            }
+            
+            .stats-content {
+                overflow: hidden;
+                transition: max-height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease;
+            }
+            
+            .stats-card.collapsed .stats-content {
+                max-height: 0;
+                opacity: 0;
+                padding-top: 0;
+                padding-bottom: 0;
+            }
+            
+            .stats-card:not(.collapsed) .stats-content {
+                max-height: 500px;
+                opacity: 1;
             }
             
             .stats-grid {
                 display: grid;
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: 1fr;
                 gap: 10px;
             }
             
             .stats-item {
                 display: flex;
-                flex-direction: column;
-                padding: 8px;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px;
                 background: rgba(0,0,0,0.1);
                 border-radius: 8px;
                 transition: all 0.3s ease;
@@ -175,9 +219,10 @@ export async function createInfoPanel(page) {
             }
             
             .stats-label {
-                font-size: 12px;
+                font-size: 14px;
                 color: var(--text-secondary);
-                margin-bottom: 5px;
+                margin-bottom: 0;
+                flex: 1;
             }
             
             .stats-value {
@@ -185,6 +230,8 @@ export async function createInfoPanel(page) {
                 font-weight: bold;
                 font-size: 15px;
                 color: var(--text-primary);
+                text-align: right;
+                min-width: 80px;
             }
             
             .stats-value.highlight {
@@ -195,13 +242,15 @@ export async function createInfoPanel(page) {
             
             .action-badge {
                 display: inline-block;
-                padding: 3px 8px;
+                padding: 6px 12px;
                 border-radius: 12px;
                 font-size: 13px;
                 font-weight: bold;
                 background-color: var(--bg-panel);
                 color: var(--text-secondary);
                 transition: all 0.3s ease;
+                text-align: right;
+                min-width: 80px;
             }
             
             .action-badge.jump {
@@ -1267,46 +1316,56 @@ export async function createInfoPanel(page) {
             
             <div class="panel-content">
                 <div class="game-stats-container">
-                    <div class="stats-card">
-                        <div class="stats-title">游戏统计</div>
-                        <div class="stats-grid">
-                            <div class="stats-item">
-                                <div class="stats-label">迭代次数:</div>
-                                <div class="stats-value" id="iteration">1</div>
-                            </div>
-                            <div class="stats-item">
-                                <div class="stats-label">最高分:</div>
-                                <div class="stats-value highlight" id="high-score">0</div>
-                            </div>
-                            <div class="stats-item">
-                                <div class="stats-label">当前分数:</div>
-                                <div class="stats-value" id="current-score">0</div>
-                            </div>
-                            <div class="stats-item">
-                                <div class="stats-label">游戏速度:</div>
-                                <div class="stats-value" id="game-speed">0</div>
+                    <div class="stats-card" id="game-stats-card">
+                        <div class="stats-title" onclick="toggleStatsCard('game-stats-card')">
+                            <span>游戏统计</span>
+                            <span class="collapse-indicator">▼</span>
+                        </div>
+                        <div class="stats-content">
+                            <div class="stats-grid">
+                                <div class="stats-item">
+                                    <div class="stats-label">迭代次数:</div>
+                                    <div class="stats-value" id="iteration">1</div>
+                                </div>
+                                <div class="stats-item">
+                                    <div class="stats-label">最高分:</div>
+                                    <div class="stats-value highlight" id="high-score">0</div>
+                                </div>
+                                <div class="stats-item">
+                                    <div class="stats-label">当前分数:</div>
+                                    <div class="stats-value" id="current-score">0</div>
+                                </div>
+                                <div class="stats-item">
+                                    <div class="stats-label">游戏速度:</div>
+                                    <div class="stats-value" id="game-speed">0</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="stats-card">
-                        <div class="stats-title">障碍物信息</div>
-                        <div class="stats-grid">
-                            <div class="stats-item">
-                                <div class="stats-label">类型:</div>
-                                <div class="stats-value" id="obstacle-info">无</div>
-                            </div>
-                            <div class="stats-item">
-                                <div class="stats-label">距离:</div>
-                                <div class="stats-value" id="distance">0</div>
-                            </div>
-                            <div class="stats-item">
-                                <div class="stats-label">动作:</div>
-                                <div class="action-badge" id="should-jump">不跳跃</div>
-                            </div>
-                            <div class="stats-item">
-                                <div class="stats-label">原因:</div>
-                                <div class="stats-value" id="jump-reason">N/A</div>
+                    <div class="stats-card" id="obstacle-stats-card">
+                        <div class="stats-title" onclick="toggleStatsCard('obstacle-stats-card')">
+                            <span>障碍物信息</span>
+                            <span class="collapse-indicator">▼</span>
+                        </div>
+                        <div class="stats-content">
+                            <div class="stats-grid">
+                                <div class="stats-item">
+                                    <div class="stats-label">类型:</div>
+                                    <div class="stats-value" id="obstacle-info">无</div>
+                                </div>
+                                <div class="stats-item">
+                                    <div class="stats-label">距离:</div>
+                                    <div class="stats-value" id="distance">0</div>
+                                </div>
+                                <div class="stats-item">
+                                    <div class="stats-label">动作:</div>
+                                    <div class="action-badge" id="should-jump">不跳跃</div>
+                                </div>
+                                <div class="stats-item">
+                                    <div class="stats-label">原因:</div>
+                                    <div class="stats-value" id="jump-reason">N/A</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2252,6 +2311,9 @@ export async function createInfoPanel(page) {
             }
         }
     });
+
+    // Initialize collapse functionality for stats cards
+    await initializeStatsCollapse(page);
 }
 
 /**
@@ -2366,6 +2428,11 @@ export async function updateInfoPanel(page, data) {
             if (document.getElementById("formula-display")) {
                 document.getElementById("formula-display").textContent = "Game reset, waiting for new analysis...";
             }
+        }
+
+        // Preserve collapse states after content updates
+        if (typeof window.preserveCollapseStates === "function") {
+            window.preserveCollapseStates();
         }
     }, data);
 }
@@ -2563,5 +2630,49 @@ export async function updateNeuralNetworkDisplay(page, networkData) {
 export async function getIterationState(page) {
     return await page.evaluate(() => {
         return window.continueIteration || false;
+    });
+}
+
+/**
+ * Initialize stats card collapse functionality
+ * @param {Object} page - Playwright page object
+ */
+export async function initializeStatsCollapse(page) {
+    await page.evaluate(() => {
+        // Store collapse states to persist during updates
+        window.statsCollapseStates = window.statsCollapseStates || {};
+
+        // Function to toggle stats card collapse state
+        window.toggleStatsCard = function (cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+
+            const isCollapsed = card.classList.contains("collapsed");
+
+            if (isCollapsed) {
+                card.classList.remove("collapsed");
+                window.statsCollapseStates[cardId] = false;
+            } else {
+                card.classList.add("collapsed");
+                window.statsCollapseStates[cardId] = true;
+            }
+        };
+
+        // Function to preserve collapse states during content updates
+        window.preserveCollapseStates = function () {
+            Object.keys(window.statsCollapseStates).forEach((cardId) => {
+                const card = document.getElementById(cardId);
+                if (card && window.statsCollapseStates[cardId]) {
+                    card.classList.add("collapsed");
+                } else if (card) {
+                    card.classList.remove("collapsed");
+                }
+            });
+        };
+
+        // Auto-preserve states when the page loads
+        setTimeout(() => {
+            window.preserveCollapseStates();
+        }, 100);
     });
 }
